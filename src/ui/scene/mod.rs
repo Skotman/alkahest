@@ -12,7 +12,7 @@ use std::{
 };
 
 use alkahest_data::{
-    map::SRespawnPoint,
+    map::{dump_audio_references, SRespawnPoint},
     tfx::{FeatureRendererSubscription, common::AxisAlignedBBox},
 };
 use alkahest_render::{
@@ -50,7 +50,7 @@ use crate::world::audio::{s_start_all_audio_sources, s_update_audio_sources};
 use crate::{
     app::SharedState,
     ui::{
-        hotkeys::{SHORTCUT_GAZE, SHORTCUT_MAP_HOME, SHORTCUT_TOGGLE_CROSSHAIR},
+        hotkeys::{SHORTCUT_DUMP_AUDIO, SHORTCUT_GAZE, SHORTCUT_MAP_HOME, SHORTCUT_TOGGLE_CROSSHAIR},
         scene::{controller::CameraController, crosshair::draw_crosshair},
         util::{ExternalDataWidgetExt, UiExt},
     },
@@ -282,6 +282,9 @@ impl Scene {
         }
         if ui.input_mut(|i| i.consume_shortcut(&SHORTCUT_TOGGLE_CROSSHAIR)) {
             self.show_crosshair = !self.show_crosshair;
+        }
+        if ui.input_mut(|i| i.consume_shortcut(&SHORTCUT_DUMP_AUDIO)) {
+            dump_audio_references(&self.scene_id);
         }
     }
 
@@ -536,8 +539,17 @@ impl Scene {
                 image_rect.min.y + (1.0 - (ndc.y * 0.5 + 0.5)) * screen_size.y,
             );
 
+            let display_text = if let Some(hash) = label.entity_hash {
+                if label.kind == crate::world::node_filter::NodeFilter::Entity {
+                    format!("{} [{}]", label.label, format!("{:?}", hash))
+                } else {
+                    format!("{} [{:?}]", label.label, hash)
+                }
+            } else {
+                label.label.clone()
+            };
             let font = egui::FontId::proportional(14.0);
-            let galley = painter.layout_no_wrap(label.label.clone(), font, egui::Color32::WHITE);
+            let galley = painter.layout_no_wrap(display_text, font, egui::Color32::WHITE);
             let text_rect = egui::Align2::CENTER_CENTER
                 .anchor_rect(egui::Rect::from_min_size(screen_point, galley.size()));
 
@@ -547,6 +559,14 @@ impl Scene {
                 egui::Color32::from_black_alpha(140),
             );
             painter.galley(text_rect.min, galley, egui::Color32::WHITE);
+
+            let hash_info = label.entity_hash.map_or_else(String::new, |h| format!("Entity: {:?}\n", h))
+                + &label.related_hashes.iter().map(|h| format!("Component/Event: {:?}\n", h)).collect::<String>();
+            let id_str = format!("{}_{:?}_{:?}", label.label, label.entity_hash, screen_point);
+            let response = ui.interact(text_rect, egui::Id::new(id_str.as_str()), egui::Sense::click());
+            if !hash_info.trim().is_empty() {
+                response.on_hover_text(hash_info.trim());
+            }
         }
     }
 
@@ -572,6 +592,17 @@ impl Scene {
             .clicked()
         {
             self.show_crosshair = !self.show_crosshair;
+        }
+
+        if ui
+            .selectable_label(
+                false,
+                format!("{} Audio Dump", GoogleMaterialSymbols::VolumeUp),
+            )
+            .on_hover_text("Dump audio references for this scene")
+            .clicked()
+        {
+            dump_audio_references(&self.scene_id);
         }
 
         if matches!(self.controller, CameraController::Orbit { .. })

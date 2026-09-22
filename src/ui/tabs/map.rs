@@ -74,6 +74,7 @@ impl MapTab {
                         spawn_candidates.retain(|(_, _, p)| *p == 0x2ea8fb98);
                     }
 
+
                     if let Some((translation, rotation, hash)) = fastrand::choice(spawn_candidates)
                     {
                         self.scene.camera.position = translation + Vec3::Z * 2.0;
@@ -95,7 +96,6 @@ impl MapTab {
                 }
             }
         }
-
         if self.load_task.is_pending() {
             let (_, rect) = ui.allocate_space(ui.available_size());
             ui.painter()

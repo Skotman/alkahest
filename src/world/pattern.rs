@@ -64,7 +64,7 @@ pub fn spawn_pattern(
     let header = package_manager()
         .read_tag_struct::<SPattern>(pattern_tag)
         .context("Failed to read SEntity")?;
-    spawn_pattern_from_header(world, &header, map_data_list, transform)
+    spawn_pattern_from_header(world, &header, map_data_list, transform, Some(pattern_tag))
 }
 
 pub fn spawn_pattern_from_header(
@@ -72,6 +72,7 @@ pub fn spawn_pattern_from_header(
     header: &SPattern,
     map_data_list: Option<&SComponentDataListPtr>,
     transform: Option<Transform>,
+    entity_hash: Option<TagHash>,
 ) -> anyhow::Result<hecs::Entity> {
     let renderer = Renderer::instance();
 
@@ -79,7 +80,9 @@ pub fn spawn_pattern_from_header(
     if let Some(transform) = transform {
         world.insert_one(entity, transform)?;
     }
-    world.insert_one(entity, Label::default_for(NodeFilter::Entity))?;
+    let mut label = Label::default_for(NodeFilter::Entity);
+    label.entity_hash = entity_hash;
+    world.insert_one(entity, label)?;
 
     for component_ref in &header.components {
         let component: SComponent = package_manager().read_tag_struct(component_ref.component)?;
@@ -548,7 +551,7 @@ pub fn spawn_pattern_from_header(
                     ));
                 }
             }
-            0x8080666C => {
+            0x8080666D => {
                 #[cfg(feature = "wwise")]
                 let data = get_component_data!(SAudioPathComponent);
                 #[cfg(feature = "wwise")]
@@ -576,7 +579,7 @@ pub fn spawn_pattern_from_header(
                     Err(e) => error!("Failed to play audio event: {e:?}"),
                 }
             }
-            0x80806671 => {
+            0x8080666F => {
                 #[cfg(feature = "wwise")]
                 let data = get_component_data!(SAudioPointComponent);
                 // println!("Playing event {:X?}", data);

@@ -20,3 +20,5 @@ rayon.workspace = true
 tiger-parse.workspace = true
 tiger-pkg.workspace = true
 chroma-dbg = "0.2.1"
+fnv = "1"
+log = "0.4.34"

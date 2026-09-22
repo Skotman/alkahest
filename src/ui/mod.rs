@@ -196,6 +196,8 @@ impl Gui {
         ctx.global_style_mut(|s| s.visuals.panel_fill = Color32::from_black_alpha(96));
 
         let output = ctx.run_ui(raw_input, |ui| {
+            std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+
             DockArea::new(&mut self.tree)
                 .show_add_buttons(false)
                 .style({
@@ -262,6 +264,7 @@ impl Gui {
             if let Some((_, active_tab)) = self.tree.find_active_focused() {
                 active_tab.process_hotkeys(ui);
             }
+            })).unwrap_or_default()
         });
 
         for tab in self.added_nodes.drain(..) {

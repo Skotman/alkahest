@@ -4,6 +4,7 @@ use std::{
 };
 
 use alkahest_data::activity::SActivity;
+use alkahest_data::map::dump_audio_references;
 use alkahest_render::{Renderer, camera::Camera};
 use anyhow::Context;
 use egui::{Color32, FontId, Rect, TextStyle, Vec2, vec2};
@@ -200,64 +201,67 @@ impl ActivityTab {
                         self.set_current_map(index);
                     }
                 });
+    });
+        egui::CentralPanel::default().show(ui, |ui| {
+            let Some(map) = self.maps.get_mut(self.current_map_index) else { return; };
+            match map.poll_load() {
+                ActivityLoadState::Unloaded => {}
+                ActivityLoadState::Loading => {
+                    let (_, rect) = ui.allocate_space(ui.available_size_before_wrap());
+                    ui.painter()
+                        .rect_filled(rect, 0, Color32::from_rgb(14, 24, 28));
+                    ui.d_paint_spinner_at(Rect::from_center_size(rect.center(), Vec2::splat(96.0)));
+                    ui.painter().text(
+                        rect.center() + vec2(0.0, 42.0),
+                        egui::Align2::CENTER_TOP,
+                        "Loading...",
+                        egui::FontId::proportional(24.0),
+                        Color32::GRAY,
+                    );
+                }
+                ActivityLoadState::Error => {
+                    let (_, rect) = ui.allocate_space(ui.available_size_before_wrap());
+                    ui.painter()
+                        .rect_filled(rect, 0, Color32::from_rgb(28, 14, 14));
+                    ui.painter().text(
+                        rect.center(),
+                        egui::Align2::CENTER_CENTER,
+                        GoogleMaterialSymbols::Error,
+                        egui::FontId::proportional(96.0),
+                        Color32::DARK_RED,
+                    );
+                    ui.painter().text(
+                        rect.center() + vec2(0.0, 48.0),
+                        egui::Align2::CENTER_TOP,
+                        "Map load failed",
+                        egui::FontId::proportional(24.0),
+                        Color32::DARK_RED,
+                    );
+                    ui.painter().text(
+                        rect.center() + vec2(0.0, 82.0),
+                        egui::Align2::CENTER_TOP,
+                        "See logs for error information",
+                        egui::FontId::proportional(16.0),
+                        Color32::DARK_RED,
+                    );
+                }
+                ActivityLoadState::Loaded => {
+                    if let Some(world) = map.world.as_mut() {
+                        std::mem::swap(world, &mut self.scene.world);
+                        self.scene
+                            .show(ui, ui.available_size_before_wrap(), egui_d3d11);
+                        self.scene
+                            .set_id(format!("activity_{}_map_{}", self.tag, map.index));
+                        std::mem::swap(&mut self.scene.world, world);
+                    }
+                }
+            }
         });
-
         let Some(map) = self.maps.get_mut(self.current_map_index) else {
             return;
         };
 
-        match map.poll_load() {
-            ActivityLoadState::Unloaded => {}
-            ActivityLoadState::Loading => {
-                let (_, rect) = ui.allocate_space(ui.available_size_before_wrap());
-                ui.painter()
-                    .rect_filled(rect, 0, Color32::from_rgb(14, 24, 28));
-                ui.d_paint_spinner_at(Rect::from_center_size(rect.center(), Vec2::splat(96.0)));
-                ui.painter().text(
-                    rect.center() + vec2(0.0, 42.0),
-                    egui::Align2::CENTER_TOP,
-                    "Loading...",
-                    egui::FontId::proportional(24.0),
-                    Color32::GRAY,
-                );
-            }
-            ActivityLoadState::Error => {
-                let (_, rect) = ui.allocate_space(ui.available_size_before_wrap());
-                ui.painter()
-                    .rect_filled(rect, 0, Color32::from_rgb(28, 14, 14));
-                ui.painter().text(
-                    rect.center(),
-                    egui::Align2::CENTER_CENTER,
-                    GoogleMaterialSymbols::Error,
-                    egui::FontId::proportional(96.0),
-                    Color32::DARK_RED,
-                );
-                ui.painter().text(
-                    rect.center() + vec2(0.0, 48.0),
-                    egui::Align2::CENTER_TOP,
-                    "Map load failed",
-                    egui::FontId::proportional(24.0),
-                    Color32::DARK_RED,
-                );
-                ui.painter().text(
-                    rect.center() + vec2(0.0, 82.0),
-                    egui::Align2::CENTER_TOP,
-                    "See logs for error information",
-                    egui::FontId::proportional(16.0),
-                    Color32::DARK_RED,
-                );
-            }
-            ActivityLoadState::Loaded => {
-                if let Some(world) = map.world.as_mut() {
-                    std::mem::swap(world, &mut self.scene.world);
-                    self.scene
-                        .show(ui, ui.available_size_before_wrap(), egui_d3d11);
-                    self.scene
-                        .set_id(format!("activity_{}_map_{}", self.tag, map.index));
-                    std::mem::swap(&mut self.scene.world, world);
-                }
-            }
-        }
+
     }
 }
 

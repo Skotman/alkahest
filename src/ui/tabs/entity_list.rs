@@ -164,6 +164,7 @@ impl ModelProvider for EntityModelProvider {
                             &pattern,
                             None,
                             Some(Transform::default()),
+                            None,
                         ) {
                             error!("Failed to load pattern {hash}: {e}");
                         }

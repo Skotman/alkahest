@@ -103,14 +103,14 @@ impl WideHash {
         }
     }
 
-    /// Will lookup hash64 in package managers's h64 table in the case of a 64 bit hash
+    /// Will look up hash64 in package managers' h64 table in the case of a 64-bit hash
     /// Falls back to TagHash::NONE if not found
     pub fn hash32(&self) -> TagHash {
         self.hash32_checked().unwrap_or(TagHash::NONE)
     }
 
-    /// Will lookup hash64 in package managers's h64 table in the case of a 64 bit hash
-    /// Returns None if the hash is not found or null in case of a 32 bit hash
+    /// Will look up hash64 in package managers' h64 table in the case of a 64-bit hash
+    /// Returns None if the hash is not found or null in case of a 32-bit hash
     pub fn hash32_checked(&self) -> Option<TagHash> {
         match self {
             WideHash::Hash32(v) => v.is_some().then_some(*v),

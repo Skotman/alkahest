@@ -136,9 +136,16 @@ opt-level = 3
 [profile.dev.package.alkahest-data]
 opt-level = 0
 
+[profile.dev.package.alkahest-render]
+opt-level = 0
+
+[profile.dev.package.tiger-parse]
+opt-level = 0
+
 [profile.dev]
 opt-level = 1
-codegen-units = 256
+debug = "full"
+codegen-units = 64
 
 [profile.profiling]
 inherits = "release"
@@ -151,6 +158,16 @@ codegen-units = 1
 opt-level = 3
 strip = true
 # panic = "abort"
+overflow-checks = false
+
+# Release profile (what you actually use)
+[profile.release]
+opt-level = 3
+lto = "thin"                # Thin LTO: faster builds, most benefits
+codegen-units = 16
+debug = true                # Keep debug info for profiling
+strip = false               # Keep symbols for debugging
+panic = "unwind"
 overflow-checks = false
 
 [features]

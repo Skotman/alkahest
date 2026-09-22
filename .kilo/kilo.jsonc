@@ -1,0 +1,87 @@
+{
+  "$schema": "https://app.kilo.ai/config.json",
+  "permission": {
+    "read": "allow",
+    "glob": "allow",
+    "grep": "allow",
+    "list": "allow",
+    "edit": "allow",
+    "bash": "ask",
+    "external_directory": "deny",
+    "task": "allow"
+  },
+  "skill": {
+    "*": "allow",
+    "skill-registry": "allow",
+    "learn-codebase": "allow",
+    "make-plan": "allow",
+    "debugging-wizard": "allow",
+    "rust-best-practices": "allow",
+    "code-review-and-quality": "allow",
+    "systematic-debugging": "allow"
+  },
+  "autoApprove": {
+    "edit": {
+      "patterns": [
+        "src/data/map.rs",
+        "src/world/pattern.rs",
+        "src/ui/tabs/map.rs"
+      ]
+    }
+  },
+  "checkpoints": {
+    "enabled": true,
+    "interval": 5
+  },
+  "shared_agent_board": true,
+  "agent": {
+    "plan": {
+      "description": "Analyzes codebase structure and call chains without modifications",
+      "mode": "primary",
+      "color": "#3B82F6",
+      "permission": {
+        "read": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "edit": "deny",
+        "bash": "deny"
+      }
+    },
+    "Code Rust": {
+      "description": "Modifies only the 3 allowed files with surgical precision",
+      "mode": "both",
+      "color": "#10B981",
+      "permission": {
+        "read": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "edit": {
+          "src/data/map.rs": "allow",
+          "src/world/pattern.rs": "allow",
+          "src/world/map.rs": "allow",
+          "*": "deny"
+        },
+        "bash": "ask"
+      },
+      "autoApprove": {
+        "edit": true,
+        "read": true,
+        "glob": true,
+        "grep": true
+      }
+    },
+    "debug-rust": {
+      "description": "Validates TSV/JSON manifest output, verifies no FFFFFFFF, stops on failure",
+      "mode": "subagent",
+      "color": "#EF4444",
+      "permission": {
+        "read": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "edit": "deny",
+        "bash": "allow",
+        "task": "allow"
+      }
+    }
+  }
+}

@@ -1,0 +1,29 @@
+# .kilocodeignore — prevent token bloat / binary bloat
+# Confirmed exclusions per audio-linkage plan and workspace contents
+
+# Binary / large output
+Media/
+output/
+target/
+build/
+
+# Game package / audio binaries
+*.pkg
+*.wem
+*.fbx
+*.tmp
+*.swp
+
+# Logs / caches
+*.log
+node_modules/
+.idea/
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Project-local large data (exclude from context)
+wordlist.txt
+media/
